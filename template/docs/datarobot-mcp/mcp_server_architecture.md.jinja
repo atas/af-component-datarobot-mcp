@@ -78,6 +78,8 @@ Run `task workload-deployment-flag-check` (invoked automatically by `task instal
 | Variable | Description | Default |
 |---|---|---|
 | `ENABLE_MCP_ON_WORKLOAD_API` | Opt in to Workload API deployment instead of serverless | `false` |
+| `DEPLOYMENT_HTTPS_PROXY` | Egress proxy handed to the deployed server as `HTTPS_PROXY`/`HTTP_PROXY` runtime parameters, for clusters whose only route to PyPI or external services is an HTTP proxy. The `DEPLOYMENT_` prefix keeps the Pulumi runner itself unproxied. | unset |
+| `DEPLOYMENT_NO_PROXY` | Forwarded as the `NO_PROXY` runtime parameter alongside `DEPLOYMENT_HTTPS_PROXY` | unset |
 | `DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT` | Reuse an existing execution environment instead of building one. Applies to serverless deployments and to Workload deployments using a generated Dockerfile; has no effect on the default Workload path, which uses a provided Dockerfile | None&mdash;builds a new execution environment |
 | `DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT_VERSION_ID` | Version of the reused execution environment; only applies when `DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT` is set | None |
 | `DATAROBOT_MCP_EXECUTION_ENVIRONMENT_NAME` | Name for a newly built execution environment; only applies when `DATAROBOT_DEFAULT_MCP_EXECUTION_ENVIRONMENT` is empty | `[{pulumi stack}] [{app name}]` |
