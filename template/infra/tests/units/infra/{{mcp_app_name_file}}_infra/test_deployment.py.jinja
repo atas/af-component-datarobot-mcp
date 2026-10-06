@@ -222,6 +222,38 @@ class TestProvisionDeploymentMcpServer:
             expected = "srv"
             assert actual == expected
 
+    def test_provision_forwards_deployment_proxy_runtime_params(
+        self, monkeypatch
+    ) -> None:
+        monkeypatch.setenv("DEPLOYMENT_HTTPS_PROXY", "http://squid:3128")
+        monkeypatch.setenv("DEPLOYMENT_NO_PROXY", "localhost,.svc")
+        with stub_deployment(prediction_environment_id=None) as mocks:
+            deployment.provision_deployment_mcp_server(
+                mcp_server_asset_name="srv",
+                get_deployments_app_files=lambda: [("/tmp/app.py", "app.py")],
+            )
+            params = mocks["custom_model_cls"].call_args.kwargs[
+                "runtime_parameter_values"
+            ]
+            by_key = {p.key: p.value for p in params}
+            assert by_key["HTTPS_PROXY"] == "http://squid:3128"
+            assert by_key["HTTP_PROXY"] == "http://squid:3128"
+            assert by_key["NO_PROXY"] == "localhost,.svc"
+
+    def test_provision_skips_proxy_runtime_params_when_unset(self, monkeypatch) -> None:
+        monkeypatch.delenv("DEPLOYMENT_HTTPS_PROXY", raising=False)
+        with stub_deployment(prediction_environment_id=None) as mocks:
+            deployment.provision_deployment_mcp_server(
+                mcp_server_asset_name="srv",
+                get_deployments_app_files=lambda: [("/tmp/app.py", "app.py")],
+            )
+            params = mocks["custom_model_cls"].call_args.kwargs[
+                "runtime_parameter_values"
+            ]
+            assert not any(
+                p.key in ("HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY") for p in params
+            )
+
     def test_provision_exports_lineage_metadata(self) -> None:
         with stub_deployment(prediction_environment_id=None) as mocks:
             deployment.provision_deployment_mcp_server(
