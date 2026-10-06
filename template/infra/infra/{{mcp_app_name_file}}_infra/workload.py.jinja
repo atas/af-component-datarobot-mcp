@@ -61,6 +61,7 @@ from .mcp_bundle import (
     FileBundler,
     get_workload_source_files,
 )
+from .deployment import deployment_proxy_runtime_parameters
 from .mcp_cli_configs import tool_flag_env_vars
 from .mcp_execution_environment import provision_mcp_execution_environment
 from .mcp_oauth_configs import (
@@ -290,6 +291,11 @@ def _workload_environment_vars(mcp_server_asset_name: str) -> list[dict[str, str
         )
     if otel_entity_id := os.getenv("OTEL_ENTITY_ID"):
         env_vars.append({"name": "OTEL_ENTITY_ID", "value": otel_entity_id})
+    # Egress proxy, forwarded exactly as the deployment path's runtime parameters.
+    env_vars.extend(
+        {"name": param.key, "value": param.value}
+        for param in deployment_proxy_runtime_parameters()
+    )
     return env_vars
 
 

@@ -487,6 +487,28 @@ class TestWorkloadEnvironmentVars:
         assert forwarded["OTEL_COLLECTOR_BASE_URL"] == "https://collector"
         assert forwarded["OTEL_ENTITY_ID"] == "deployment-123"
 
+    def test_deployment_proxy_forwarded_like_the_deployment_path(self) -> None:
+        with env(
+            SESSION_SECRET_KEY=None,
+            DEPLOYMENT_HTTPS_PROXY="http://squid:3128",
+            DEPLOYMENT_NO_PROXY="localhost,.svc",
+        ):
+            forwarded = {
+                v["name"]: v["value"]
+                for v in workload._workload_environment_vars("[test]")
+                if v.get("source") not in {"credential", "dr-credential"}
+            }
+
+        assert forwarded["HTTPS_PROXY"] == "http://squid:3128"
+        assert forwarded["HTTP_PROXY"] == "http://squid:3128"
+        assert forwarded["NO_PROXY"] == "localhost,.svc"
+
+    def test_deployment_proxy_absent_when_unset(self) -> None:
+        with env(SESSION_SECRET_KEY=None, DEPLOYMENT_HTTPS_PROXY=None):
+            names = {v["name"] for v in workload._workload_environment_vars("[test]")}
+
+        assert not names & {"HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY"}
+
 
 class TestCreateWorkload:
     def test_uses_high_importance_by_default(self) -> None:
